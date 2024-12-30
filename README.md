@@ -1,4 +1,5 @@
-# Spring Cloud API Gateway Setup 🛠️
+# Spring Cloud Gateway Setup with Eureka Discovery Server 🛠️
+
 
 ## 🌐 What is Spring Cloud Gateway?
 
@@ -30,4 +31,106 @@ Spring Cloud Gateway is a **flexible**, **feature-rich API Gateway solution** de
 
 ---
 
-## 💡 Setup in Spring Boot
+## 💡 Spring Cloud Gateway Setup in Spring Boot
+
+1. **Add dependencies in `pom.xml`:**
+   ```xml
+   <dependency>
+       <groupId>org.springframework.cloud</groupId>
+       <artifactId>spring-cloud-starter-gateway</artifactId>
+   </dependency>
+   <dependency>
+       <groupId>org.springframework.cloud</groupId>
+       <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+   </dependency>
+   <dependency>
+       <groupId>org.springframework.boot</groupId>
+       <artifactId>spring-boot-starter-webflux</artifactId>
+   </dependency>
+   ```
+
+2. **Create the Spring Boot main class:**
+   ```java
+   import org.springframework.boot.SpringApplication;
+   import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+   @SpringBootApplication
+   public class GatewayServerApplication {
+       public static void main(String[] args) {
+           SpringApplication.run(GatewayServerApplication.class, args);
+       }
+   }
+   ```
+
+3. **Configure `application.properties`:**
+   ```properties
+   # Gateway service name
+   spring.application.name=spring-cloud-gateway
+
+   # Server port
+   server.port=8765
+
+   # Eureka configuration
+   eureka.client.service-url.defaultZone=http://localhost:8762/eureka/
+   eureka.client.fetch-registry=true
+   eureka.client.register-with-eureka=true
+
+   # Configure reactive web application type
+   spring.main.web-application-type=reactive
+   ```
+
+4. **Configure Gateway Routes:**
+   Add routes for services dynamically or statically.
+
+   - **Dynamic Routing with Eureka:**
+     The gateway automatically discovers services from Eureka:
+     ```properties
+     spring.cloud.gateway.discovery.locator.enabled=true
+     spring.cloud.gateway.discovery.locator.lower-case-service-id=true
+     ```
+
+   - **Static Routes (Optional):**
+     Define specific routes in `application.properties`:
+     ```properties
+     spring.cloud.gateway.routes[0].id=admission-service
+     spring.cloud.gateway.routes[0].uri=lb://ADMISSION-SERVICE
+     spring.cloud.gateway.routes[0].predicates[0]=Path=/admission/**
+     spring.cloud.gateway.routes[0].filters[0]=StripPrefix=1
+     ```
+
+5. **Run the Gateway Application:**
+   Once the configuration is complete, start the Gateway application. It will register with Eureka and dynamically route requests to registered services.
+
+---
+
+## **🎨 Microservices Architecture Overview**
+
+- **🌐 Eureka Discovery Server** acts as the service registry for all microservices.
+- **🌐 Spring Cloud Gateway** serves as the entry point, routing client requests to microservices based on the service ID in Eureka.
+
+---
+
+### **Dynamic Routing with Eureka**
+
+When you enable `spring.cloud.gateway.discovery.locator.enabled=true`, the Gateway automatically discovers and routes requests to services registered in Eureka.
+
+For example:
+- If a service is registered in Eureka with the name `ADMISSION-SERVICE`, you can access it through:
+  ```
+  http://localhost:8765/admission-service/endpoint
+  ```
+
+### **📊 Comparison: Zuul vs. Spring Cloud Gateway**
+| **Feature**               | **Zuul**                          | **Spring Cloud Gateway**             |
+|---------------------------|------------------------------------|---------------------------------------|
+| Programming Model         | Servlet (Blocking)                | Reactive (Non-Blocking)              |
+| Performance               | Moderate                         | High                                 |
+| Built-in Filters          | Limited                          | Extensive                            |
+| Service Discovery         | Yes                              | Yes (Built-in with Eureka)           |
+| Scalability               | Moderate                         | High (Reactive Model)                |
+| Load Balancing            | Ribbon                           | Built-in                             |
+
+---
+
+This setup provides a **modern**, **scalable**, and **efficient** API Gateway solution using Spring Cloud Gateway with Eureka for microservices architectures.
+
